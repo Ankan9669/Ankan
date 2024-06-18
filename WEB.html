@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fund Tracker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            width: 80%;
+            margin: auto;
+            overflow: hidden;
+        }
+        header {
+            background: #333;
+            color: #fff;
+            padding-top: 30px;
+            min-height: 70px;
+            border-bottom: #77b300 3px solid;
+            text-align: center;
+        }
+        header h1 {
+            margin: 0;
+        }
+        section {
+            background: #fff;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h2 {
+            border-bottom: 2px solid #77b300;
+            padding-bottom: 10px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .fund-inputs {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        .fund-inputs input, .fund-inputs button {
+            padding: 10px;
+            font-size: 16px;
+        }
+        .fund-inputs button {
+            background-color: #77b300;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+        }
+        .edit-btn, .delete-btn {
+            cursor: pointer;
+            color: #fff;
+            padding: 5px 10px;
+            margin: 5px;
+            border-radius: 3px;
+            text-align: center;
+        }
+        .edit-btn {
+            background-color: #ffa500;
+        }
+        .delete-btn {
+            background-color: #ff0000;
+        }
+        .balance {
+            font-size: 24px;
+            font-weight: bold;
+            margin-top: 20px;
+            text-align: center;
+        }
+        .section-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .section-title h2 {
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Fund Tracker</h1>
+    </header>
+    <div class="container">
+        <section id="fund-collection">
+            <div class="section-title">
+                <h2>Fund Collection</h2>
+                <button onclick="toggleSection('fund-collection-form')">Add Collection</button>
+            </div>
+            <div id="fund-collection-form" style="display: none;">
+                <div class="fund-inputs">
+                    <input type="date" id="collection-date" placeholder="Date">
+                    <input type="number" id="collection-amount" placeholder="Amount">
+                    <input type="text" id="collection-description" placeholder="Description">
+                    <button onclick="addFund('collection')">Add</button>
+                </div>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Amount</th>
+                        <th>Description</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="collection-table-body">
+                    <!-- Fund collection entries will appear here -->
+                </tbody>
+            </table>
+        </section>
+
+        <section id="fund-spending">
+            <div class="section-title">
+                <h2>Fund Spending</h2>
+                <button onclick="toggleSection('fund-spending-form')">Add Spending</button>
+            </div>
+            <div id="fund-spending-form" style="display: none;">
+                <div class="fund-inputs">
+                    <input type="date" id="spending-date" placeholder="Date">
+                    <input type="number" id="spending-amount" placeholder="Amount">
+                    <input type="text" id="spending-description" placeholder="Description">
+                    <button onclick="addFund('spending')">Add</button>
+                </div>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Amount</th>
+                        <th>Description</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="spending-table-body">
+                    <!-- Fund spending entries will appear here -->
+                </tbody>
+            </table>
+        </section>
+
+        <div class="balance">
+            Total Balance: ₹<span id="total-balance">0</span>
+        </div>
+    </div>
+    <script>
+        let collections = [];
+        let spendings = [];
+
+        function toggleSection(sectionId) {
+            const section = document.getElementById(sectionId);
+            section.style.display = section.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function addFund(type) {
+            const date = document.getElementById(`${type}-date`).value;
+            const amount = parseFloat(document.getElementById(`${type}-amount`).value);
+            const description = document.getElementById(`${type}-description`).value;
+
+            if (date && amount && description) {
+                const fund = { date, amount, description };
+
+                if (type === 'collection') {
+                    collections.push(fund);
+                } else if (type === 'spending') {
+                    spendings.push(fund);
+                }
+
+                renderTables();
+                clearInputs(type);
+            } else {
+                alert('Please fill in all fields');
+            }
+        }
+
+        function renderTables() {
+            renderTable('collection', collections);
+            renderTable('spending', spendings);
+
+            const totalCollection = collections.reduce((sum, fund) => sum + fund.amount, 0);
+            const totalSpending = spendings.reduce((sum, fund) => sum + fund.amount, 0);
+            const totalBalance = totalCollection - totalSpending;
+
+            document.getElementById('total-balance').textContent = totalBalance;
+        }
+
+        function renderTable(type, funds) {
+            const tableBody = document.getElementById(`${type}-table-body`);
+            tableBody.innerHTML = '';
+
+            funds.forEach((fund, index) => {
+                const row = document.createElement('tr');
+
+                const dateCell = document.createElement('td');
+                dateCell.textContent = fund.date;
+                row.appendChild(dateCell);
+
+                const amountCell = document.createElement('td');
+                amountCell.textContent = `₹${fund.amount}`;
+                row.appendChild(amountCell);
+
+                const descriptionCell = document.createElement('td');
+                descriptionCell.textContent = fund.description;
+                row.appendChild(descriptionCell);
+
+                const actionsCell = document.createElement('td');
+                const editBtn = document.createElement('span');
+                editBtn.textContent = 'Edit';
+                editBtn.className = 'edit-btn';
+                editBtn.onclick = () => editFund(type, index);
+                const deleteBtn = document.createElement('span');
+                deleteBtn.textContent = 'Delete';
+                deleteBtn.className = 'delete-btn';
+                deleteBtn.onclick = () => deleteFund(type, index);
+                actionsCell.appendChild(editBtn);
+                actionsCell.appendChild(deleteBtn);
+                row.appendChild(actionsCell);
+
+                tableBody.appendChild(row);
+            });
+        }
+
+        function clearInputs(type) {
+            document.getElementById(`${type}-date`).value = '';
+            document.getElementById(`${type}-amount`).value = '';
+            document.getElementById(`${type}-description`).value = '';
+        }
+
+        function editFund(type, index) {
+            const fund = type === 'collection' ? collections[index] : spendings[index];
+            document.getElementById(`${type}-date`).value = fund.date;
+            document.getElementById(`${type}-amount`).value = fund.amount;
+            document.getElementById(`${type}-description`).value = fund.description;
+            deleteFund(type, index);
+        }
+
+        function deleteFund(type, index) {
+            if (type === 'collection') {
+                collections.splice(index, 1);
+            } else if (type === 'spending') {
+                spendings.splice(index, 1);
+            }
+            renderTables();
+        }
+    </script>
+</body>
+</html>
